@@ -52,42 +52,42 @@ export function KpiCard({ kpi }: KpiCardProps) {
       <div className="grid grid-cols-2 gap-2">
         {kpi.id === 'jensen-kelly' && (
           <>
-            <MetricBox label="Retorno Anual" value={`${kpi.values.arithmeticReturn}%`} />
-            <MetricBox label="Volatilidad" value={`${kpi.values.volatility}%`} />
-            <MetricBox label="½ Kelly" value={`${kpi.values.kelly50}x`} />
-            <MetricBox label="Máx Leverage" value={`${kpi.values.maxLeverage}x`} />
+            <MetricBox label="Annual Return" value={`${kpi.values.arithmeticReturn}%`} />
+            <MetricBox label="Volatility" value={`${kpi.values.volatility}%`} />
+            <MetricBox label="Half Kelly" value={`${kpi.values.kelly50}x`} />
+            <MetricBox label="Max Leverage" value={`${kpi.values.maxLeverage}x`} />
           </>
         )}
         {kpi.id === 'omega-ratio' && (
           <>
             <MetricBox label="Omega" value={`${kpi.values.currentOmega}`} />
-            <MetricBox label="Objetivo" value={`${kpi.values.annualTarget}%`} />
+            <MetricBox label="Target" value={`${kpi.values.annualTarget}%`} />
             <MetricBox label="Lookback" value={`${kpi.values.lookback}d`} />
             <MetricBox label="Max MAR" value={`${kpi.values.maxMar}%`} />
           </>
         )}
         {kpi.id === 'var-vag' && (
           <>
-            <MetricBox label="VAR 1x" value={`${kpi.values.var1x}%`} />
+            <MetricBox label="VaR 1x" value={`${kpi.values.var1x}%`} />
             <MetricBox label="VaG 1x" value={`${kpi.values.vag1x}%`} />
-            <MetricBox label="VAR 3x" value={`${kpi.values.var3x}%`} />
+            <MetricBox label="VaR 3x" value={`${kpi.values.var3x}%`} />
             <MetricBox label="VaG 3x" value={`${kpi.values.vag3x}%`} />
           </>
         )}
         {kpi.id === 'kelly-curve' && (
           <>
-            <MetricBox label="Kelly Óptimo" value={`${kpi.values.optimalKelly}x`} />
-            <MetricBox label="½ Kelly" value={`${kpi.values.halfKelly}x`} />
-            <MetricBox label="Crec. Máx" value={`${kpi.values.maxGrowth}%`} />
-            <MetricBox label="Régimen" value={`${kpi.values.regime}`} />
+            <MetricBox label="Optimal Kelly" value={`${kpi.values.optimalKelly}x`} />
+            <MetricBox label="Half Kelly" value={`${kpi.values.halfKelly}x`} />
+            <MetricBox label="Max Growth" value={`${kpi.values.maxGrowth}%`} />
+            <MetricBox label="Regime" value={`${kpi.values.regime}`} />
           </>
         )}
         {kpi.id === 'vmkl' && (
           <>
-            <MetricBox label="Apalancamiento" value={`${kpi.values.optimalLeverage}x`} />
-            <MetricBox label="Vol. Pronóstico" value={`${kpi.values.forecastVol}%`} />
-            <MetricBox label="μ Predicho" value={`${kpi.values.predictedMu}%`} />
-            <MetricBox label="Régimen" value={`${kpi.values.regime}`} />
+            <MetricBox label="Leverage" value={`${kpi.values.optimalLeverage}x`} />
+            <MetricBox label="Forecast Vol" value={`${kpi.values.forecastVol}%`} />
+            <MetricBox label="Predicted μ" value={`${kpi.values.predictedMu}%`} />
+            <MetricBox label="Regime" value={`${kpi.values.regime}`} />
           </>
         )}
       </div>
@@ -159,7 +159,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
                 <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
                 <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="var" name="VAR (Downside)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="var" name="VaR (Downside)" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="vag" name="VaG (Upside)" fill="#22c55e" radius={[4, 4, 0, 0]} />
               </BarChart>
             )}
@@ -171,7 +171,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
                 <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
                 <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" />
                 <ReferenceLine x={Number(kpi.values.optimalKelly)} stroke="#00e676" strokeDasharray="4 4" label={{ value: 'Kelly Opt', fill: '#00e676', fontSize: 10 }} />
-                <ReferenceLine x={Number(kpi.values.halfKelly)} stroke="#ffd600" strokeDasharray="4 4" label={{ value: '½ Kelly', fill: '#ffd600', fontSize: 10 }} />
+                <ReferenceLine x={Number(kpi.values.halfKelly)} stroke="#ffd600" strokeDasharray="4 4" label={{ value: 'Half Kelly', fill: '#ffd600', fontSize: 10 }} />
                 <Area type="monotone" dataKey="growth" stroke="#a855f7" fill="rgba(168,85,247,0.15)" strokeWidth={2} />
               </AreaChart>
             )}
@@ -192,13 +192,13 @@ export function KpiCard({ kpi }: KpiCardProps) {
 
       {/* Formula */}
       <div className="bg-primary/50 rounded-xl p-4 border border-border">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-2">Fórmula</div>
+        <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-2">Formula</div>
         <pre className="text-xs text-text-muted font-mono whitespace-pre-wrap">{def.advancedFormula}</pre>
       </div>
 
       {/* Parameters table */}
       <div className="space-y-2">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest">Parámetros</div>
+        <div className="text-[10px] font-bold text-gold uppercase tracking-widest">Parameters</div>
         <div className="grid grid-cols-1 gap-2">
           {def.advancedParameters.map((param) => (
             <div key={param.name} className="flex items-start gap-3 bg-primary/30 rounded-lg p-3 border border-border">
@@ -214,7 +214,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
 
       {/* Detailed values */}
       <div className="space-y-2">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest">Valores Calculados</div>
+        <div className="text-[10px] font-bold text-gold uppercase tracking-widest">Calculated Values</div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {Object.entries(kpi.values).map(([key, val]) => (
             <div key={key} className="bg-primary/30 rounded-lg p-2 border border-border">
@@ -270,7 +270,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
               mode === 'basic' ? 'bg-gold/10 text-gold' : 'text-text-muted hover:text-white'
             }`}
           >
-            Básico
+            Basic
           </button>
           <button
             onClick={() => setMode('advanced')}
@@ -278,7 +278,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
               mode === 'advanced' ? 'bg-gold/10 text-gold' : 'text-text-muted hover:text-white'
             }`}
           >
-            Avanzado
+            Advanced
           </button>
         </div>
       </div>
@@ -304,7 +304,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
             className="flex items-center gap-2 text-xs font-bold text-gold hover:text-gold-light transition-all"
           >
             <BookOpen className="w-4 h-4" />
-            Notas Educativas
+            Educational Notes
             {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           <AnimatePresence>
@@ -318,15 +318,15 @@ export function KpiCard({ kpi }: KpiCardProps) {
               >
                 <div className="mt-3 space-y-3 text-sm text-text-muted">
                   <div>
-                    <span className="text-white font-bold">¿Qué es?</span>
+                    <span className="text-white font-bold">What is it?</span>
                     <p className="mt-1">{def.notes}</p>
                   </div>
                   <div>
-                    <span className="text-white font-bold">¿Por qué importa?</span>
+                    <span className="text-white font-bold">Why it matters</span>
                     <p className="mt-1">{def.whyItMatters}</p>
                   </div>
                   <div>
-                    <span className="text-white font-bold">Cómo usarlo</span>
+                    <span className="text-white font-bold">How to use it</span>
                     <p className="mt-1">{def.howToUse}</p>
                   </div>
                 </div>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { BarChart3, RefreshCw, LayoutGrid, Map } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  BarChart3, RefreshCw, Map, X, Shield, Activity, GitBranch, Scale
+} from 'lucide-react';
 import { KpiCard } from '../ui/KpiCard';
 import { calculateAllKpis, type KpiResult } from '../../lib/kpis';
 import { fetchHistoricalData } from '../../lib/data';
@@ -13,12 +15,19 @@ const TIMEFRAMES = [
   { label: '5Y', years: 5 },
 ];
 
+const categoryIcons: Record<string, React.ReactNode> = {
+  Leverage: <Scale className="w-4 h-4" />,
+  Risk: <Shield className="w-4 h-4" />,
+  Distribution: <GitBranch className="w-4 h-4" />,
+  Volatility: <Activity className="w-4 h-4" />,
+};
+
 export default function KpisDashboard() {
   const [symbol, setSymbol] = useState('SPY');
   const [years, setYears] = useState(3);
   const [kpis, setKpis] = useState<KpiResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<'grid' | 'map'>('grid');
+  const [showMap, setShowMap] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -54,18 +63,19 @@ export default function KpisDashboard() {
       return {
         id: kpi.id,
         name: def?.shortTitle || kpi.name,
+        fullName: def?.name || kpi.name,
         category: def?.category || 'Other',
         categoryColor: def?.categoryColor || '#6b6b80',
         mainValue,
         signal: signalConfig.label,
         signalColor: signalConfig.color,
-        icon: def?.icon || 'BarChart3',
+        icon: categoryIcons[def?.category || ''] || <BarChart3 className="w-4 h-4" />,
       };
     });
   }, [kpis]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 pb-20 pt-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 pb-20 pt-8 space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -79,7 +89,7 @@ export default function KpisDashboard() {
               <h1 className="text-2xl font-black text-white">KPIs</h1>
             </div>
             <p className="text-text-muted text-sm">
-              Indicadores avanzados de leverage, riesgo y distribución. Todos calculados con datos reales.
+              Advanced leverage, risk, and distribution indicators. All calculated with real data.
             </p>
           </div>
 
@@ -120,109 +130,115 @@ export default function KpisDashboard() {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
 
-            {/* View toggle */}
-            <div className="flex bg-secondary rounded-xl p-1 border border-border">
-              <button
-                onClick={() => setView('grid')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                  view === 'grid' ? 'bg-gold/10 text-gold' : 'text-text-muted hover:text-white'
-                }`}
-              >
-                <LayoutGrid className="w-3 h-3" />
-                Grid
-              </button>
-              <button
-                onClick={() => setView('map')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                  view === 'map' ? 'bg-gold/10 text-gold' : 'text-text-muted hover:text-white'
-                }`}
-              >
-                <Map className="w-3 h-3" />
-                Mapa
-              </button>
-            </div>
+            {/* Map button */}
+            <button
+              onClick={() => setShowMap(true)}
+              className="px-3 py-2.5 bg-card border border-border rounded-xl text-white hover:bg-white/5 transition-all flex items-center gap-2 text-xs font-bold"
+            >
+              <Map className="w-4 h-4 text-gold" />
+              Global Map
+            </button>
           </div>
         </div>
       </motion.div>
 
-      {/* Global Map View */}
-      {view === 'map' && globalMapData.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-secondary border border-border rounded-2xl p-6"
-        >
-          <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <Map className="w-5 h-5 text-gold" />
-            Vista Global — {symbol} ({years}Y)
-          </h2>
-          <p className="text-text-muted text-sm mb-6">Resumen de todos los KPIs a la vez. Colores según señal.</p>
+      {/* Global Map Modal */}
+      <AnimatePresence>
+        {showMap && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowMap(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-secondary border border-border rounded-2xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Map className="w-5 h-5 text-gold" />
+                  Global Overview — {symbol} ({years}Y)
+                </h2>
+                <button
+                  onClick={() => setShowMap(false)}
+                  className="p-2 bg-primary/50 rounded-lg hover:bg-white/5 transition-all"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+              <p className="text-text-muted text-sm mb-6">
+                Summary of all KPIs at once. Colors indicate signal strength.
+              </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {globalMapData.map((item) => (
-              <motion.div
-                key={item.id}
-                whileHover={{ scale: 1.02 }}
-                className="bg-card border border-border rounded-xl p-4 space-y-3 cursor-pointer"
-                  onClick={() => {
-                  setView('grid');
-                  setTimeout(() => {
-                    const el = document.getElementById(item.id);
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 100);
-                }}
-              >
-                <div className="flex items-center justify-between">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {globalMapData.map((item) => (
                   <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: item.categoryColor }}
-                  />
-                  <span
-                    className="text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider"
-                    style={{
-                      backgroundColor: `${item.signalColor}15`,
-                      color: item.signalColor,
-                      border: `1px solid ${item.signalColor}30`,
+                    key={item.id}
+                    className="bg-card border border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-gold/30 transition-all"
+                    onClick={() => {
+                      setShowMap(false);
+                      setTimeout(() => {
+                        const el = document.getElementById(item.id);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 150);
                     }}
                   >
-                    {item.signal}
-                  </span>
-                </div>
-                <div className="text-2xl font-black text-white">{item.mainValue}</div>
-                <div className="text-sm font-bold text-white">{item.name}</div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider">{item.category}</div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-6 flex flex-wrap gap-4 text-xs text-text-muted">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green inline-block" /> Óptimo / Comprar</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> Moderado / Neutral</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> Precaución</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red inline-block" /> Evitar / Vender</span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* KPI Grid */}
-      {view === 'grid' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {kpis.length === 0 && loading && (
-            <div className="col-span-full flex items-center justify-center h-64">
-              <div className="text-text-muted text-sm flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Calculando indicadores...
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2" style={{ color: item.categoryColor }}>
+                        {item.icon}
+                        <span className="text-xs font-bold uppercase tracking-wider">{item.category}</span>
+                      </div>
+                      <span
+                        className="text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider"
+                        style={{
+                          backgroundColor: `${item.signalColor}15`,
+                          color: item.signalColor,
+                          border: `1px solid ${item.signalColor}30`,
+                        }}
+                      >
+                        {item.signal}
+                      </span>
+                    </div>
+                    <div className="text-2xl font-black text-white">{item.mainValue}</div>
+                    <div className="text-sm font-bold text-white">{item.name}</div>
+                    <div className="text-[10px] text-text-muted">{item.fullName}</div>
+                  </div>
+                ))}
               </div>
+
+              {/* Legend */}
+              <div className="mt-6 flex flex-wrap gap-4 text-xs text-text-muted border-t border-border pt-4">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green inline-block" /> Optimal / Buy</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> Moderate / Neutral</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> Caution</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red inline-block" /> Avoid / Sell</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* KPI List (single column, extensive) */}
+      <div className="space-y-6">
+        {kpis.length === 0 && loading && (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-text-muted text-sm flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Calculating indicators...
             </div>
-          )}
-          {kpis.map((kpi) => (
-            <div key={kpi.id} id={kpi.id}>
-              <KpiCard kpi={kpi} />
-            </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+        {kpis.map((kpi) => (
+          <div key={kpi.id} id={kpi.id}>
+            <KpiCard kpi={kpi} />
+          </div>
+        ))}
+      </div>
 
       {/* Category legend */}
       <div className="flex flex-wrap gap-4 justify-center text-xs text-text-muted pt-4 border-t border-border">
