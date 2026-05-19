@@ -16,7 +16,7 @@ export interface KpiResult {
   name: string;
   category: 'Leverage' | 'Risk' | 'Distribution' | 'Volatility';
   values: Record<string, number | string>;
-  signal: 'buy' | 'sell' | 'neutral' | 'caution' | 'aggressive' | 'defensive';
+  signal: 'bullish' | 'neutral' | 'caution' | 'bearish';
   chartData?: any[];
 }
 
@@ -126,14 +126,30 @@ export function calcJensenKelly(input: KpiInput): KpiResult {
   };
 
   // Chart data: geometric returns at various leverage levels
+  // Include zone classification for each leverage level
   const chartData: any[] = [];
-  for (let l = 0; l <= 5; l += 0.1) {
+  for (let l = 0; l <= 5; l += 0.05) {
+    const growth = geo(l);
+    let zone = 'Underinvesting';
+    const k = kellyFull || 1;
+    if (l > k * 0.9) zone = 'Never Logical';
+    else if (l > k * 0.66) zone = 'High Risk';
+    else if (l > k * 0.33) zone = 'Optimal';
+
     chartData.push({
-      leverage: parseFloat(l.toFixed(1)),
-      growth: geo(l) * 100,
-      kelly: l === parseFloat(kellyFull.toFixed(1)),
+      leverage: parseFloat(l.toFixed(2)),
+      growth: growth * 100,
+      zone,
+      isKelly: Math.abs(l - kellyFull) < 0.025,
+      isHalfKelly: Math.abs(l - kelly50) < 0.025,
     });
   }
+
+  // Signal based on Kelly full
+  let signal: 'bullish' | 'neutral' | 'caution' | 'bearish' = 'bearish';
+  if (kellyFull > 3) signal = 'bullish';
+  else if (kellyFull > 1.5) signal = 'neutral';
+  else if (kellyFull > 0.5) signal = 'caution';
 
   return {
     id: 'jensen-kelly',
@@ -164,7 +180,7 @@ export function calcJensenKelly(input: KpiInput): KpiResult {
       sharpeKelly: parseFloat(sharpe(kellyFull).toFixed(2)),
       sharpeOptimalSharpe: parseFloat(sharpe(sharpeOptimal).toFixed(2)),
     },
-    signal: kellyFull > 3 ? 'aggressive' : kellyFull > 1.5 ? 'buy' : kellyFull > 0.5 ? 'neutral' : 'defensive',
+    signal,
     chartData,
   };
 }
@@ -245,6 +261,11 @@ export function calcOmegaRatio(input: KpiInput): KpiResult {
     poor: o <= 0.7,
   }));
 
+  let signal: 'bullish' | 'neutral' | 'caution' | 'bearish' = 'bearish';
+  if (currentOmega > 1.5) signal = 'bullish';
+  else if (currentOmega > 1.0) signal = 'neutral';
+  else if (currentOmega > 0.7) signal = 'caution';
+
   return {
     id: 'omega-ratio',
     name: 'Omega Ratio Analysis',
@@ -254,14 +275,15 @@ export function calcOmegaRatio(input: KpiInput): KpiResult {
       annualTarget: 10,
       lookback,
       maxMar: parseFloat(maxMar.toFixed(2)),
+      omegaCurve: JSON.stringify(curvePoints.slice(0, 25)), // first 25 points for display
     },
-    signal: currentOmega > 1.5 ? 'buy' : currentOmega > 1.0 ? 'neutral' : currentOmega > 0.7 ? 'caution' : 'sell',
+    signal,
     chartData,
   };
 }
 
 // ═════════════════════════════════════════════════════════════════════════
-// KPI 3: MULTI-LEVERAGE VAR/VAG
+// KPI 3: MULTI-LEVERAGE VAR/VaG
 // ═════════════════════════════════════════════════════════════════════════
 
 export interface VarVagResult {
@@ -322,6 +344,12 @@ export function calcVarVag(input: KpiInput): KpiResult {
     });
   }
 
+  const ratio3x = results[2]?.ratio ?? 0;
+  let signal: 'bullish' | 'neutral' | 'caution' | 'bearish' = 'bearish';
+  if (ratio3x > 6) signal = 'bullish';
+  else if (ratio3x > 3) signal = 'neutral';
+  else if (ratio3x > 1) signal = 'caution';
+
   return {
     id: 'var-vag',
     name: 'Multi-Leverage VAR/VaG',
@@ -340,7 +368,7 @@ export function calcVarVag(input: KpiInput): KpiResult {
       confidence,
       lookback,
     },
-    signal: (results[2]?.ratio ?? 0) > 6 ? 'buy' : (results[2]?.ratio ?? 0) > 3 ? 'neutral' : (results[2]?.ratio ?? 0) > 1 ? 'caution' : 'sell',
+    signal,
     chartData: results,
   };
 }
@@ -369,6 +397,9 @@ export function calcKellyCurve(input: KpiInput): KpiResult {
   const optimalKelly = annualizedVol === 0 ? 0 : annualizedReturn / (annualizedVol ** 2);
   const halfKelly = optimalKelly * 0.5;
 
+  // Find zero-crossing leverage (where growth = 0)
+  const zeroGrowthLeverage = annualizedVol === 0 ? 0 : 2 * annualizedReturn / (annualizedVol ** 2);
+
   // Growth function
   const kellyGrowth = (leverage: number) => {
     return annualizedReturn * leverage - 0.5 * (annualizedVol ** 2) * (leverage ** 2);
@@ -384,7 +415,8 @@ export function calcKellyCurve(input: KpiInput): KpiResult {
     const growth = kellyGrowth(lev);
 
     let zone = 'Underinvesting';
-    if (lev > optimalKelly * 0.9) zone = 'Never Logical';
+    if (lev > zeroGrowthLeverage) zone = 'Suicidal';
+    else if (lev > optimalKelly) zone = 'Never Logical';
     else if (lev > optimalKelly * 0.66) zone = 'High Risk';
     else if (lev > optimalKelly * 0.33) zone = 'Optimal Sizing';
 
@@ -398,6 +430,11 @@ export function calcKellyCurve(input: KpiInput): KpiResult {
   // Find zero crossing
   const maxGrowth = kellyGrowth(optimalKelly);
 
+  let signal: 'bullish' | 'neutral' | 'caution' | 'bearish' = 'bearish';
+  if (optimalKelly > 3) signal = 'bullish';
+  else if (optimalKelly > 1.5) signal = 'neutral';
+  else if (optimalKelly > 0.5) signal = 'caution';
+
   return {
     id: 'kelly-curve',
     name: 'Kelly Criterion Curve',
@@ -408,9 +445,10 @@ export function calcKellyCurve(input: KpiInput): KpiResult {
       optimalKelly: parseFloat(optimalKelly.toFixed(2)),
       halfKelly: parseFloat(halfKelly.toFixed(2)),
       maxGrowth: parseFloat((maxGrowth * 100).toFixed(2)),
+      zeroGrowthLeverage: parseFloat(zeroGrowthLeverage.toFixed(2)),
       regime: optimalKelly > 0 ? 'LONG' : optimalKelly < 0 ? 'SHORT' : 'NEUTRAL',
     },
-    signal: optimalKelly > 3 ? 'aggressive' : optimalKelly > 1.5 ? 'buy' : optimalKelly > 0.5 ? 'neutral' : 'defensive',
+    signal,
     chartData: curve,
   };
 }
@@ -466,20 +504,30 @@ export function calcVMKL(input: KpiInput): KpiResult {
 
   const optimalLeverage = rawLeverages[rawLeverages.length - 1] || cappedLeverage;
 
-  // Regime
-  let regime = 'CASH';
-  if (optimalLeverage >= 4.0) regime = 'VERY AGGRESSIVE';
-  else if (optimalLeverage >= 2.5) regime = 'AGGRESSIVE';
-  else if (optimalLeverage >= 1.5) regime = 'GROWTH';
-  else if (optimalLeverage >= 0.75) regime = 'BALANCED';
-  else if (optimalLeverage >= 0.25) regime = 'DEFENSIVE';
+  // Regime classification
+  const getRegime = (lev: number) => {
+    if (lev >= 4.0) return 'VERY AGGRESSIVE';
+    if (lev >= 2.5) return 'AGGRESSIVE';
+    if (lev >= 1.5) return 'GROWTH';
+    if (lev >= 0.75) return 'BALANCED';
+    if (lev >= 0.25) return 'DEFENSIVE';
+    return 'CASH';
+  };
 
-  // Chart data
+  const regime = getRegime(optimalLeverage);
+
+  // Chart data with regime for each point
   const chartData = rawLeverages.map((lev, i) => ({
     day: i,
     leverage: parseFloat(lev.toFixed(2)),
     volatility: parseFloat((forecastVol * 100).toFixed(1)),
+    regime: getRegime(lev),
   }));
+
+  let signal: 'bullish' | 'neutral' | 'caution' | 'bearish' = 'bearish';
+  if (optimalLeverage > 3) signal = 'bullish';
+  else if (optimalLeverage > 2) signal = 'neutral';
+  else if (optimalLeverage > 1) signal = 'caution';
 
   return {
     id: 'vmkl',
@@ -497,7 +545,7 @@ export function calcVMKL(input: KpiInput): KpiResult {
       exponentB: powerB,
       coefficientA: powerA,
     },
-    signal: optimalLeverage > 3 ? 'aggressive' : optimalLeverage > 2 ? 'buy' : optimalLeverage > 1 ? 'neutral' : 'defensive',
+    signal,
     chartData,
   };
 }
