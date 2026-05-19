@@ -266,17 +266,10 @@ export function KpiCard({ kpi }: KpiCardProps) {
         </div>
       </AccordionSection>
 
-      {/* Calculated Values */}
+      {/* Key Metrics Table */}
       <div className="bg-secondary rounded-xl p-4 border border-border">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-3">All Calculated Values</div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {Object.entries(kpi.values).map(([key, val]) => (
-            <div key={key} className="bg-primary/30 rounded-lg p-2 border border-border">
-              <div className="text-[10px] text-text-muted uppercase truncate">{key}</div>
-              <div className="text-sm font-bold text-white">{String(val)}</div>
-            </div>
-          ))}
-        </div>
+        <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-3">Key Metrics</div>
+        <KeyMetricsTable kpi={kpi} />
       </div>
     </div>
   );
@@ -580,6 +573,79 @@ function ChartAnnotation({ kpi }: { kpi: KpiResult }) {
   return (
     <div className="mt-3 text-[11px] text-text-muted leading-relaxed border-t border-border pt-3">
       <span className="text-gold font-bold">Chart Guide:</span> {text}
+    </div>
+  );
+}
+
+function KeyMetricsTable({ kpi }: { kpi: KpiResult }) {
+  const metrics: { label: string; value: string }[] = [];
+  const v = kpi.values;
+
+  if (kpi.id === 'jensen-kelly') {
+    metrics.push(
+      { label: 'Annual Return', value: `${v.arithmeticReturn}%` },
+      { label: 'Volatility', value: `${v.volatility}%` },
+      { label: 'Full Kelly', value: `${v.kellyFull}x` },
+      { label: 'Half Kelly', value: `${v.kelly50}x` },
+      { label: 'Quarter Kelly', value: `${v.kelly25}x` },
+      { label: 'Max Leverage', value: `${v.maxLeverage}x` },
+      { label: 'Geometric Return (1x)', value: `${v.geo1x}%` },
+      { label: 'Geometric Return (Kelly)', value: `${v.geoKelly}%` },
+      { label: 'Sharpe (1x)', value: String(v.sharpe1x) },
+      { label: 'Sharpe (Kelly)', value: String(v.sharpeKelly) },
+    );
+  } else if (kpi.id === 'omega-ratio') {
+    metrics.push(
+      { label: 'Current Omega', value: String(v.currentOmega) },
+      { label: 'Annual Target', value: `${v.annualTarget}%` },
+      { label: 'Lookback', value: `${v.lookback} days` },
+      { label: 'Max MAR', value: `${v.maxMar}%` },
+    );
+  } else if (kpi.id === 'var-vag') {
+    metrics.push(
+      { label: 'VaR 1x (5%)', value: `${v.var1x}%` },
+      { label: 'VaG 1x (95%)', value: `${v.vag1x}%` },
+      { label: 'VaR 3x (5%)', value: `${v.var3x}%` },
+      { label: 'VaG 3x (95%)', value: `${v.vag3x}%` },
+      { label: 'Ratio 1x', value: String(v.ratio1x) },
+      { label: 'Ratio 3x', value: String(v.ratio3x) },
+      { label: 'Holding Period', value: `${v.holdingPeriod} days` },
+      { label: 'Confidence', value: `${v.confidence}%` },
+    );
+  } else if (kpi.id === 'kelly-curve') {
+    metrics.push(
+      { label: 'Annual Return', value: `${v.annualizedReturn}%` },
+      { label: 'Annual Volatility', value: `${v.annualizedVolatility}%` },
+      { label: 'Full Kelly', value: `${v.optimalKelly}x` },
+      { label: 'Half Kelly', value: `${v.halfKelly}x` },
+      { label: 'Max Growth', value: `${v.maxGrowth}%` },
+      { label: 'Zero Growth Leverage', value: `${v.zeroGrowthLeverage}x` },
+      { label: 'Regime', value: String(v.regime) },
+    );
+  } else if (kpi.id === 'vmkl') {
+    metrics.push(
+      { label: 'Optimal Leverage', value: `${v.optimalLeverage}x` },
+      { label: 'Forecast Volatility', value: `${v.forecastVol}%` },
+      { label: 'Predicted Return (μ)', value: `${v.predictedMu}%` },
+      { label: 'Full Kelly', value: `${v.fullKelly}x` },
+      { label: 'Kelly Fraction', value: `${v.kellyFraction}%` },
+      { label: 'Regime', value: String(v.regime) },
+      { label: 'Mu Capped', value: String(v.isMuCapped) },
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <tbody className="divide-y divide-border">
+          {metrics.map((m) => (
+            <tr key={m.label} className="hover:bg-white/[0.02] transition-colors">
+              <td className="py-2.5 px-3 text-text-muted text-xs font-medium w-1/2">{m.label}</td>
+              <td className="py-2.5 px-3 text-white font-bold text-right">{m.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
