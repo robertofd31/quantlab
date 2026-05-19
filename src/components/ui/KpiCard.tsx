@@ -120,9 +120,9 @@ export function KpiCard({ kpi }: KpiCardProps) {
                 <Bar dataKey="vag" fill="#22c55e" radius={[4, 4, 0, 0]} />
                 <Tooltip content={<CustomTooltip />} />
               </BarChart>
-            ) : kpi.id === 'kelly-curve' ? (
+            ) : (kpi.id === 'kelly-curve' || kpi.id === 'jensen-kelly') ? (
               <AreaChart data={kpi.chartData}>
-                <Area type="monotone" dataKey="growth" stroke="#a855f7" fill="rgba(168,85,247,0.15)" strokeWidth={2} />
+                <Area type="monotone" dataKey="growth" stroke={def.categoryColor} fill={`${def.categoryColor}15`} strokeWidth={2} />
                 <Tooltip content={<CustomTooltip />} />
               </AreaChart>
             ) : (
