@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BarChart3, RefreshCw, Map, X, Shield, Activity, GitBranch, Scale
+  BarChart3, RefreshCw, Map, X, ChevronRight
 } from 'lucide-react';
 import { KpiCard } from '../ui/KpiCard';
 import { calculateAllKpis, type KpiResult } from '../../lib/kpis';
@@ -15,18 +15,14 @@ const TIMEFRAMES = [
   { label: '5Y', years: 5 },
 ];
 
-const categoryIcons: Record<string, React.ReactNode> = {
-  Leverage: <Scale className="w-4 h-4" />,
-  Risk: <Shield className="w-4 h-4" />,
-  Distribution: <GitBranch className="w-4 h-4" />,
-  Volatility: <Activity className="w-4 h-4" />,
-};
+const KPI_ORDER = ['jensen-kelly', 'omega-ratio', 'var-vag', 'kelly-curve', 'vmkl'];
 
 export default function KpisDashboard() {
   const [symbol, setSymbol] = useState('SPY');
   const [years, setYears] = useState(3);
   const [kpis, setKpis] = useState<KpiResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedKpi, setSelectedKpi] = useState<string>('jensen-kelly');
   const [showMap, setShowMap] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -46,6 +42,8 @@ export default function KpisDashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const selectedKpiData = kpis.find((k) => k.id === selectedKpi);
 
   // Global map data
   const globalMapData = useMemo(() => {
@@ -69,18 +67,17 @@ export default function KpisDashboard() {
         mainValue,
         signal: signalConfig.label,
         signalColor: signalConfig.color,
-        icon: categoryIcons[def?.category || ''] || <BarChart3 className="w-4 h-4" />,
       };
     });
   }, [kpis]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 pb-20 pt-8 space-y-8">
-      {/* Header */}
+    <div className="max-w-[1440px] mx-auto px-4 md:px-6 pb-20 pt-8">
+      {/* Top header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
+        className="mb-6"
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -93,9 +90,7 @@ export default function KpisDashboard() {
             </p>
           </div>
 
-          {/* Controls */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Ticker selector */}
             <select
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
@@ -106,7 +101,6 @@ export default function KpisDashboard() {
               ))}
             </select>
 
-            {/* Timeframe */}
             <div className="flex bg-secondary rounded-xl p-1 border border-border">
               {TIMEFRAMES.map((tf) => (
                 <button
@@ -121,7 +115,6 @@ export default function KpisDashboard() {
               ))}
             </div>
 
-            {/* Refresh */}
             <button
               onClick={loadData}
               disabled={loading}
@@ -130,7 +123,6 @@ export default function KpisDashboard() {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
 
-            {/* Map button */}
             <button
               onClick={() => setShowMap(true)}
               className="px-3 py-2.5 bg-card border border-border rounded-xl text-white hover:bg-white/5 transition-all flex items-center gap-2 text-xs font-bold"
@@ -141,6 +133,91 @@ export default function KpisDashboard() {
           </div>
         </div>
       </motion.div>
+
+      {/* Layout: Sidebar + Main */}
+      <div className="flex gap-6">
+        {/* Sidebar — KPI List */}
+        <aside className="hidden md:flex w-72 flex-shrink-0 flex-col gap-2">
+          <div className="text-[10px] font-bold text-gold uppercase tracking-[2px] mb-2 px-2 opacity-80">Indicators</div>
+          {KPI_ORDER.map((kpiId) => {
+            const def = kpiDefinitions[kpiId];
+            const kpi = kpis.find((k) => k.id === kpiId);
+            const isActive = selectedKpi === kpiId;
+
+            let mainValue = '';
+            if (kpi) {
+              if (kpi.id === 'jensen-kelly') mainValue = `${kpi.values.kellyFull}x`;
+              else if (kpi.id === 'omega-ratio') mainValue = `${kpi.values.currentOmega}`;
+              else if (kpi.id === 'var-vag') mainValue = `${kpi.values.ratio3x}x`;
+              else if (kpi.id === 'kelly-curve') mainValue = `${kpi.values.optimalKelly}x`;
+              else if (kpi.id === 'vmkl') mainValue = `${kpi.values.optimalLeverage}x`;
+            }
+
+            return (
+              <button
+                key={kpiId}
+                onClick={() => setSelectedKpi(kpiId)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group ${
+                  isActive
+                    ? 'bg-gold/10 text-gold border border-gold/20'
+                    : 'bg-card border border-transparent hover:border-border hover:text-white text-text-muted'
+                }`}
+              >
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: def?.categoryColor || '#6b6b80' }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">{def?.shortTitle}</div>
+                  <div className="text-[10px] opacity-70 truncate">{def?.category}</div>
+                </div>
+                {mainValue && (
+                  <div className="text-xs font-black">{mainValue}</div>
+                )}
+                {isActive && <ChevronRight className="w-4 h-4 flex-shrink-0" />}
+              </button>
+            );
+          })}
+
+          {/* Legend */}
+          <div className="mt-auto pt-4 border-t border-border space-y-2 text-[10px] text-text-muted">
+            <div className="font-bold text-gold uppercase tracking-wider">Legend</div>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green inline-block" /> Optimal</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> Moderate</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> Caution</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red inline-block" /> Avoid</span>
+          </div>
+        </aside>
+
+        {/* Mobile selector */}
+        <div className="md:hidden mb-4">
+          <select
+            value={selectedKpi}
+            onChange={(e) => setSelectedKpi(e.target.value)}
+            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-white font-black focus:outline-none focus:border-gold transition-all"
+          >
+            {KPI_ORDER.map((kpiId) => (
+              <option key={kpiId} value={kpiId}>
+                {kpiDefinitions[kpiId]?.shortTitle} — {kpiDefinitions[kpiId]?.category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Main area */}
+        <main className="flex-1 min-w-0">
+          {selectedKpiData ? (
+            <KpiCard kpi={selectedKpiData} key={selectedKpiData.id} />
+          ) : loading ? (
+            <div className="flex items-center justify-center h-96">
+              <div className="text-text-muted text-sm flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                Calculating indicators...
+              </div>
+            </div>
+          ) : null}
+        </main>
+      </div>
 
       {/* Global Map Modal */}
       <AnimatePresence>
@@ -182,15 +259,11 @@ export default function KpisDashboard() {
                     className="bg-card border border-border rounded-xl p-4 space-y-3 cursor-pointer hover:border-gold/30 transition-all"
                     onClick={() => {
                       setShowMap(false);
-                      setTimeout(() => {
-                        const el = document.getElementById(item.id);
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 150);
+                      setSelectedKpi(item.id);
                     }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2" style={{ color: item.categoryColor }}>
-                        {item.icon}
                         <span className="text-xs font-bold uppercase tracking-wider">{item.category}</span>
                       </div>
                       <span
@@ -210,43 +283,10 @@ export default function KpisDashboard() {
                   </div>
                 ))}
               </div>
-
-              {/* Legend */}
-              <div className="mt-6 flex flex-wrap gap-4 text-xs text-text-muted border-t border-border pt-4">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green inline-block" /> Optimal / Buy</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> Moderate / Neutral</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> Caution</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red inline-block" /> Avoid / Sell</span>
-              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* KPI List (single column, extensive) */}
-      <div className="space-y-6">
-        {kpis.length === 0 && loading && (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-text-muted text-sm flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Calculating indicators...
-            </div>
-          </div>
-        )}
-        {kpis.map((kpi) => (
-          <div key={kpi.id} id={kpi.id}>
-            <KpiCard kpi={kpi} />
-          </div>
-        ))}
-      </div>
-
-      {/* Category legend */}
-      <div className="flex flex-wrap gap-4 justify-center text-xs text-text-muted pt-4 border-t border-border">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#f5a623' }} /> Leverage</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#ef4444' }} /> Risk</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#00d4aa' }} /> Distribution</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#3b82f6' }} /> Volatility</span>
-      </div>
     </div>
   );
 }

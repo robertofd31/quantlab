@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, BarChart, Bar, ReferenceLine, Legend
 } from 'recharts';
-import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, Code2, FileText, Calculator, Lightbulb, Settings, Bell } from 'lucide-react';
 import type { KpiResult } from '../../lib/kpis';
 import { kpiDefinitions } from '../../lib/kpiDefinitions';
 
@@ -15,10 +15,12 @@ interface KpiCardProps {
 export function KpiCard({ kpi }: KpiCardProps) {
   const [mode, setMode] = useState<'basic' | 'advanced'>('basic');
   const [showNotes, setShowNotes] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const def = kpiDefinitions[kpi.id];
   if (!def) return null;
 
   const signalConfig = def.signalLabels[kpi.signal] || { label: 'NEUTRAL', color: '#6b6b80' };
+  const ext = def.extendedContent;
 
   const renderBasic = () => (
     <div className="space-y-4">
@@ -49,7 +51,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
       </div>
 
       {/* Key metrics grid */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {kpi.id === 'jensen-kelly' && (
           <>
             <MetricBox label="Annual Return" value={`${kpi.values.arithmeticReturn}%`} />
@@ -92,17 +94,15 @@ export function KpiCard({ kpi }: KpiCardProps) {
         )}
       </div>
 
-      {/* Mini sparkline */}
+      {/* Sparkline */}
       {kpi.chartData && kpi.chartData.length > 0 && (
-        <div className="h-[120px] w-full">
+        <div className="h-[140px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             {kpi.id === 'var-vag' ? (
               <BarChart data={kpi.chartData}>
                 <Bar dataKey="var" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="vag" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '8px', fontSize: 11 }}
-                />
+                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '8px', fontSize: 11 }} />
               </BarChart>
             ) : (
               <LineChart data={kpi.chartData.slice(-30)}>
@@ -113,9 +113,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
                   strokeWidth={2}
                   dot={false}
                 />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '8px', fontSize: 11 }}
-                />
+                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '8px', fontSize: 11 }} />
               </LineChart>
             )}
           </ResponsiveContainer>
@@ -125,100 +123,197 @@ export function KpiCard({ kpi }: KpiCardProps) {
   );
 
   const renderAdvanced = () => (
-    <div className="space-y-4">
-      {/* Full chart */}
+    <div className="space-y-6">
+      {/* Main Chart */}
       {kpi.chartData && kpi.chartData.length > 0 && (
-        <div className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            {kpi.id === 'jensen-kelly' && (
-              <LineChart data={kpi.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
-                <XAxis dataKey="leverage" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
-                <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" />
-                <Line type="monotone" dataKey="growth" stroke="#f5a623" strokeWidth={2} dot={false} />
-              </LineChart>
-            )}
-            {kpi.id === 'omega-ratio' && (
-              <LineChart data={kpi.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
-                <ReferenceLine y={1} stroke="#f5a623" strokeDasharray="4 4" label={{ value: 'Breakeven', fill: '#f5a623', fontSize: 10 }} />
-                <ReferenceLine y={1.5} stroke="#089981" strokeDasharray="3 3" />
-                <ReferenceLine y={0.7} stroke="#ff9800" strokeDasharray="3 3" />
-                <Area type="monotone" dataKey="omega" stroke="#00d4aa" fill="rgba(0,212,170,0.1)" strokeWidth={2} />
-              </LineChart>
-            )}
-            {kpi.id === 'var-vag' && (
-              <BarChart data={kpi.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
-                <XAxis dataKey="leverage" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}x`} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="var" name="VaR (Downside)" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="vag" name="VaG (Upside)" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            )}
-            {kpi.id === 'kelly-curve' && (
-              <AreaChart data={kpi.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
-                <XAxis dataKey="leverage" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}x`} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
-                <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" />
-                <ReferenceLine x={Number(kpi.values.optimalKelly)} stroke="#00e676" strokeDasharray="4 4" label={{ value: 'Kelly Opt', fill: '#00e676', fontSize: 10 }} />
-                <ReferenceLine x={Number(kpi.values.halfKelly)} stroke="#ffd600" strokeDasharray="4 4" label={{ value: 'Half Kelly', fill: '#ffd600', fontSize: 10 }} />
-                <Area type="monotone" dataKey="growth" stroke="#a855f7" fill="rgba(168,85,247,0.15)" strokeWidth={2} />
-              </AreaChart>
-            )}
-            {kpi.id === 'vmkl' && (
-              <LineChart data={kpi.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
-                <ReferenceLine y={1} stroke="#fff" strokeWidth={2} />
-                <ReferenceLine y={3} stroke="#f5a623" strokeDasharray="3 3" />
-                <Line type="monotone" dataKey="leverage" stroke="#3b82f6" strokeWidth={2} dot={false} />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
+        <div className="bg-secondary rounded-xl p-4 border border-border">
+          <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-3">Indicator Chart</div>
+          <div className="h-[320px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              {kpi.id === 'jensen-kelly' && (
+                <LineChart data={kpi.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
+                  <XAxis dataKey="leverage" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
+                  <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" />
+                  <Line type="monotone" dataKey="growth" stroke="#f5a623" strokeWidth={2} dot={false} />
+                </LineChart>
+              )}
+              {kpi.id === 'omega-ratio' && (
+                <LineChart data={kpi.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
+                  <ReferenceLine y={1} stroke="#f5a623" strokeDasharray="4 4" label={{ value: 'Breakeven', fill: '#f5a623', fontSize: 10 }} />
+                  <ReferenceLine y={1.5} stroke="#089981" strokeDasharray="3 3" />
+                  <ReferenceLine y={0.7} stroke="#ff9800" strokeDasharray="3 3" />
+                  <Area type="monotone" dataKey="omega" stroke="#00d4aa" fill="rgba(0,212,170,0.1)" strokeWidth={2} />
+                </LineChart>
+              )}
+              {kpi.id === 'var-vag' && (
+                <BarChart data={kpi.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
+                  <XAxis dataKey="leverage" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}x`} />
+                  <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="var" name="VaR (Downside)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="vag" name="VaG (Upside)" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              )}
+              {kpi.id === 'kelly-curve' && (
+                <AreaChart data={kpi.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
+                  <XAxis dataKey="leverage" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}x`} />
+                  <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
+                  <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" />
+                  <ReferenceLine x={Number(kpi.values.optimalKelly)} stroke="#00e676" strokeDasharray="4 4" label={{ value: 'Kelly Opt', fill: '#00e676', fontSize: 10 }} />
+                  <ReferenceLine x={Number(kpi.values.halfKelly)} stroke="#ffd600" strokeDasharray="4 4" label={{ value: 'Half Kelly', fill: '#ffd600', fontSize: 10 }} />
+                  <Area type="monotone" dataKey="growth" stroke="#a855f7" fill="rgba(168,85,247,0.15)" strokeWidth={2} />
+                </AreaChart>
+              )}
+              {kpi.id === 'vmkl' && (
+                <LineChart data={kpi.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: '12px', fontSize: 12 }} />
+                  <ReferenceLine y={1} stroke="#fff" strokeWidth={2} />
+                  <ReferenceLine y={3} stroke="#f5a623" strokeDasharray="3 3" />
+                  <Line type="monotone" dataKey="leverage" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
 
       {/* Formula */}
-      <div className="bg-primary/50 rounded-xl p-4 border border-border">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-2">Formula</div>
-        <pre className="text-xs text-text-muted font-mono whitespace-pre-wrap">{def.advancedFormula}</pre>
-      </div>
+      <AccordionSection
+        id="formula"
+        title="Formula"
+        icon={<Calculator className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="bg-primary/50 rounded-xl p-4 border border-border">
+          <pre className="text-xs text-text-muted font-mono whitespace-pre-wrap leading-relaxed">{def.advancedFormula}</pre>
+        </div>
+      </AccordionSection>
 
-      {/* Parameters table */}
-      <div className="space-y-2">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest">Parameters</div>
-        <div className="grid grid-cols-1 gap-2">
-          {def.advancedParameters.map((param) => (
+      {/* Theory */}
+      <AccordionSection
+        id="theory"
+        title="Theory & Explanation"
+        icon={<FileText className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="text-sm text-text-muted leading-relaxed space-y-3">
+          <p>{ext.theory}</p>
+          <div className="bg-primary/30 rounded-xl p-4 border border-border">
+            <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-2">Mathematical Derivation</div>
+            <p>{ext.mathDerivation}</p>
+          </div>
+        </div>
+      </AccordionSection>
+
+      {/* Pine Script Code */}
+      <AccordionSection
+        id="code"
+        title="Pine Script Source Code"
+        icon={<Code2 className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="bg-[#0d1117] rounded-xl p-4 border border-border overflow-x-auto">
+          <pre className="text-[11px] text-green-300 font-mono whitespace-pre leading-relaxed">{ext.pineScriptCode}</pre>
+        </div>
+      </AccordionSection>
+
+      {/* Parameters */}
+      <AccordionSection
+        id="params"
+        title="Parameters & Settings"
+        icon={<Settings className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="space-y-2">
+          {ext.settingsGuide.map((param) => (
             <div key={param.name} className="flex items-start gap-3 bg-primary/30 rounded-lg p-3 border border-border">
               <div className="flex-1">
                 <div className="text-sm font-bold text-white">{param.name}</div>
                 <div className="text-xs text-gold font-mono">{param.value}</div>
               </div>
-              <div className="text-xs text-text-muted flex-1">{param.description}</div>
+              <div className="text-xs text-text-muted flex-1">{param.explanation}</div>
             </div>
           ))}
         </div>
-      </div>
+      </AccordionSection>
 
-      {/* Detailed values */}
-      <div className="space-y-2">
-        <div className="text-[10px] font-bold text-gold uppercase tracking-widest">Calculated Values</div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+      {/* Alerts */}
+      <AccordionSection
+        id="alerts"
+        title="Alert Conditions"
+        icon={<Bell className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="space-y-2">
+          {ext.alerts.map((alert, i) => (
+            <div key={i} className="flex items-start gap-3 bg-primary/30 rounded-lg p-3 border border-border">
+              <div className="w-1.5 h-1.5 rounded-full bg-gold mt-1.5 flex-shrink-0" />
+              <div>
+                <div className="text-sm font-bold text-white">{alert.condition}</div>
+                <div className="text-xs text-text-muted">{alert.message}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </AccordionSection>
+
+      {/* Practical Examples */}
+      <AccordionSection
+        id="examples"
+        title="Practical Examples & Use Cases"
+        icon={<Lightbulb className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="text-sm text-text-muted leading-relaxed">
+          {ext.practicalExamples}
+        </div>
+      </AccordionSection>
+
+      {/* References */}
+      <AccordionSection
+        id="references"
+        title="Academic References"
+        icon={<FileText className="w-4 h-4" />}
+        expanded={expandedSection}
+        setExpanded={setExpandedSection}
+      >
+        <div className="space-y-2">
+          {ext.references.map((ref, i) => (
+            <div key={i} className="flex items-start gap-2 text-sm text-text-muted">
+              <span className="text-gold font-mono text-xs mt-0.5">[{i + 1}]</span>
+              <span>{ref}</span>
+            </div>
+          ))}
+        </div>
+      </AccordionSection>
+
+      {/* Calculated Values */}
+      <div className="bg-secondary rounded-xl p-4 border border-border">
+        <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-3">All Calculated Values</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {Object.entries(kpi.values).map(([key, val]) => (
             <div key={key} className="bg-primary/30 rounded-lg p-2 border border-border">
-              <div className="text-[10px] text-text-muted uppercase">{key}</div>
+              <div className="text-[10px] text-text-muted uppercase truncate">{key}</div>
               <div className="text-sm font-bold text-white">{String(val)}</div>
             </div>
           ))}
@@ -240,25 +335,37 @@ export function KpiCard({ kpi }: KpiCardProps) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: `${def.categoryColor}15` }}
             >
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: def.categoryColor }} />
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: def.categoryColor }} />
             </div>
             <div>
-              <h3 className="text-white font-bold text-sm">{def.shortTitle}</h3>
-              <p className="text-text-muted text-[10px]">{def.name}</p>
+              <h3 className="text-white font-bold text-lg">{def.shortTitle}</h3>
+              <p className="text-text-muted text-xs">{def.name}</p>
             </div>
           </div>
-          <div
-            className="text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider"
-            style={{
-              backgroundColor: `${def.categoryColor}15`,
-              color: def.categoryColor,
-              border: `1px solid ${def.categoryColor}30`,
-            }}
-          >
-            {def.category}
+          <div className="flex items-center gap-2">
+            <div
+              className="text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider"
+              style={{
+                backgroundColor: `${def.categoryColor}15`,
+                color: def.categoryColor,
+                border: `1px solid ${def.categoryColor}30`,
+              }}
+            >
+              {def.category}
+            </div>
+            <div
+              className="text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider border"
+              style={{
+                backgroundColor: `${signalConfig.color}15`,
+                borderColor: `${signalConfig.color}30`,
+                color: signalConfig.color,
+              }}
+            >
+              {signalConfig.label}
+            </div>
           </div>
         </div>
 
@@ -266,7 +373,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
         <div className="flex bg-secondary rounded-lg p-1">
           <button
             onClick={() => setMode('basic')}
-            className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
+            className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
               mode === 'basic' ? 'bg-gold/10 text-gold' : 'text-text-muted hover:text-white'
             }`}
           >
@@ -274,7 +381,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
           </button>
           <button
             onClick={() => setMode('advanced')}
-            className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
+            className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
               mode === 'advanced' ? 'bg-gold/10 text-gold' : 'text-text-muted hover:text-white'
             }`}
           >
@@ -344,6 +451,52 @@ function MetricBox({ label, value }: { label: string; value: string }) {
     <div className="bg-primary/30 rounded-lg p-2 border border-border text-center">
       <div className="text-[10px] text-text-muted uppercase tracking-wider">{label}</div>
       <div className="text-sm font-black text-white mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function AccordionSection({
+  id,
+  title,
+  icon,
+  children,
+  expanded,
+  setExpanded,
+}: {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  expanded: string | null;
+  setExpanded: (id: string | null) => void;
+}) {
+  const isOpen = expanded === id;
+
+  return (
+    <div className="bg-secondary rounded-xl border border-border overflow-hidden">
+      <button
+        onClick={() => setExpanded(isOpen ? null : id)}
+        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-all"
+      >
+        <div className="flex items-center gap-2 text-gold">
+          {icon}
+          <span className="text-sm font-bold text-white">{title}</span>
+        </div>
+        {isOpen ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
