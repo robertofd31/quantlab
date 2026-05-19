@@ -286,12 +286,10 @@ export const kpiDefinitions: Record<string, KpiDefinition> = {
     basicInterpretation: (v) => {
       const lev = Number(v.optimalLeverage);
       const regime = String(v.regime);
-      if (lev >= 4) return `Leverage: ${lev.toFixed(2)}x — ${regime}. BULLISH — calm market, max exposure.`;
-      if (lev >= 2.5) return `Leverage: ${lev.toFixed(2)}x — ${regime}. NEUTRAL — favorable conditions.`;
-      if (lev >= 1.5) return `Leverage: ${lev.toFixed(2)}x — ${regime}. NEUTRAL — moderate growth.`;
-      if (lev >= 0.75) return `Leverage: ${lev.toFixed(2)}x — ${regime}. CAUTION — prudent management.`;
-      if (lev >= 0.25) return `Leverage: ${lev.toFixed(2)}x — ${regime}. BEARISH — defensive posture.`;
-      return `Leverage: ${lev.toFixed(2)}x — ${regime}. BEARISH — capital protection mode.`;
+      if (lev > 2.0) return `Leverage: ${lev.toFixed(2)}x — ${regime}. BULLISH — calm market, high exposure.`;
+      if (lev > 1.0) return `Leverage: ${lev.toFixed(2)}x — ${regime}. NEUTRAL — moderate growth.`;
+      if (lev > 0.3) return `Leverage: ${lev.toFixed(2)}x — ${regime}. CAUTION — prudent management.`;
+      return `Leverage: ${lev.toFixed(2)}x — ${regime}. BEARISH — defensive posture, capital protection.`;
     },
 
     advancedDescription: 'Implements the OVPMS (Optimal Volatility Plus Mean Strategy) from Tony Cooper (2010). Uses EWMA to forecast volatility and dynamically adjusts Kelly leverage. Generates alpha by reducing volatility-of-volatility (vo-vo), kurtosis, and maximum drawdown.',

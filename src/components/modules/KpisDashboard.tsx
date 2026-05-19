@@ -181,11 +181,11 @@ export default function KpisDashboard() {
 
           {/* Legend */}
           <div className="mt-auto pt-4 border-t border-border space-y-2 text-[10px] text-text-muted">
-            <div className="font-bold text-gold uppercase tracking-wider">Legend</div>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green inline-block" /> Optimal</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> Moderate</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> Caution</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red inline-block" /> Avoid</span>
+            <div className="font-bold text-gold uppercase tracking-wider">Signal Legend</div>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green inline-block" /> BULLISH</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> NEUTRAL</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> CAUTION</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red inline-block" /> BEARISH</span>
           </div>
         </aside>
 

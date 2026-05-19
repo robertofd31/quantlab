@@ -94,7 +94,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
         )}
         {kpi.id === 'kelly-curve' && (
           <>
-            <MetricBox label="Optimal Kelly" value={`${kpi.values.optimalKelly}x`} />
+            <MetricBox label="Full Kelly" value={`${kpi.values.optimalKelly}x`} />
             <MetricBox label="Half Kelly" value={`${kpi.values.halfKelly}x`} />
             <MetricBox label="Max Growth" value={`${kpi.values.maxGrowth}%`} />
             <MetricBox label="Regime" value={`${kpi.values.regime}`} />
@@ -432,10 +432,10 @@ function JensenKellyChart({ kpi }: { kpi: KpiResult }) {
       {/* Zero line */}
       <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" />
       {/* Key horizontal references */}
-      <ReferenceLine y={geo1} stroke="#22c55e" strokeDasharray="2 2" label={{ value: `1x Geo ${geo1.toFixed(1)}%`, fill: '#22c55e', fontSize: 9, position: 'right' }} />
-      <ReferenceLine y={geo2} stroke="#f5a623" strokeDasharray="2 2" label={{ value: `2x Geo ${geo2.toFixed(1)}%`, fill: '#f5a623', fontSize: 9, position: 'right' }} />
-      <ReferenceLine y={geo3} stroke="#ef4444" strokeDasharray="2 2" label={{ value: `3x Geo ${geo3.toFixed(1)}%`, fill: '#ef4444', fontSize: 9, position: 'right' }} />
-      {geoK > -100 && <ReferenceLine y={geoK} stroke="#00d4ff" strokeDasharray="2 2" label={{ value: `Kelly Geo ${geoK.toFixed(1)}%`, fill: '#00d4ff', fontSize: 9, position: 'right' }} />}
+      <ReferenceLine y={geo1} stroke="#22c55e" strokeDasharray="2 2" label={{ value: `1x Geo ${geo1.toFixed(1)}%`, fill: '#22c55e', fontSize: 9 }} />
+      <ReferenceLine y={geo2} stroke="#f5a623" strokeDasharray="2 2" label={{ value: `2x Geo ${geo2.toFixed(1)}%`, fill: '#f5a623', fontSize: 9 }} />
+      <ReferenceLine y={geo3} stroke="#ef4444" strokeDasharray="2 2" label={{ value: `3x Geo ${geo3.toFixed(1)}%`, fill: '#ef4444', fontSize: 9 }} />
+      {geoK > -100 && <ReferenceLine y={geoK} stroke="#00d4ff" strokeDasharray="2 2" label={{ value: `Kelly Geo ${geoK.toFixed(1)}%`, fill: '#00d4ff', fontSize: 9 }} />}
       {/* Vertical references */}
       <ReferenceLine x={1} stroke="#fff" strokeOpacity={0.2} strokeDasharray="3 3" />
       <ReferenceLine x={2} stroke="#fff" strokeOpacity={0.2} strokeDasharray="3 3" />
@@ -478,8 +478,7 @@ function OmegaChart({ kpi }: { kpi: KpiResult }) {
       <ReferenceArea y1={1.0} y2={1.5} fill="#f5a623" fillOpacity={0.05} />
       <ReferenceArea y1={0.7} y2={1.0} fill="#ff9800" fillOpacity={0.05} />
       <ReferenceArea y1={0} y2={0.7} fill="#ef4444" fillOpacity={0.05} />
-      <Line type="monotone" dataKey="omega" stroke="#00d4aa" strokeWidth={2} dot={false} name="Omega Ratio" />
-      {isCurve && <Line type="monotone" dataKey="omega" stroke="#00d4aa" strokeWidth={2} dot={false} name="Ω Curve" />}
+      <Line type="monotone" dataKey="omega" stroke="#00d4aa" strokeWidth={2} dot={false} name={isCurve ? 'Ω Curve' : 'Omega Ratio'} />
     </LineChart>
   );
 }
@@ -530,10 +529,10 @@ function KellyCurveChart({ kpi }: { kpi: KpiResult }) {
       {zeroLev > 0 && zeroLev < 10 && <ReferenceArea x1={zeroLev} x2={5} fill="#000" fillOpacity={0.15} />}
       {/* Key lines */}
       <ReferenceLine y={0} stroke="#ff4757" strokeDasharray="4 4" label={{ value: 'Zero Growth', fill: '#ff4757', fontSize: 9 }} />
-      <ReferenceLine x={opt} stroke="#00e676" strokeDasharray="4 4" label={{ value: `Optimal ${opt.toFixed(1)}x`, fill: '#00e676', fontSize: 10 }} />
-      <ReferenceLine x={half} stroke="#ffd600" strokeDasharray="4 4" label={{ value: `Half ${half.toFixed(1)}x`, fill: '#ffd600', fontSize: 10 }} />
+      <ReferenceLine x={opt} stroke="#00e676" strokeDasharray="4 4" label={{ value: `Full Kelly ${opt.toFixed(1)}x`, fill: '#00e676', fontSize: 10 }} />
+      <ReferenceLine x={half} stroke="#ffd600" strokeDasharray="4 4" label={{ value: `Half Kelly ${half.toFixed(1)}x`, fill: '#ffd600', fontSize: 10 }} />
       {zeroLev > 0 && zeroLev < 10 && (
-        <ReferenceLine x={zeroLev} stroke="#ff0000" strokeDasharray="4 4" label={{ value: `Ruin ${zeroLev.toFixed(1)}x`, fill: '#ff0000', fontSize: 10 }} />
+        <ReferenceLine x={zeroLev} stroke="#ff0000" strokeDasharray="4 4" label={{ value: `Zero Growth ${zeroLev.toFixed(1)}x`, fill: '#ff0000', fontSize: 10 }} />
       )}
       <Area type="monotone" dataKey="growth" stroke="#a855f7" fill="rgba(168,85,247,0.15)" strokeWidth={2} name="Expected Growth" />
     </AreaChart>
@@ -551,19 +550,18 @@ function VMKLChart({ kpi }: { kpi: KpiResult }) {
       <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#6b6b80' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} label={{ value: 'Volatility', angle: 90, position: 'insideRight', fill: '#6b6b80', fontSize: 10 }} />
       <Tooltip content={<CustomTooltip />} />
       <Legend wrapperStyle={{ fontSize: 11 }} />
-      {/* Regime reference lines */}
-      <ReferenceLine yAxisId="left" y={3} stroke="#f5a623" strokeDasharray="3 3" label={{ value: 'Max Leverage', fill: '#f5a623', fontSize: 9 }} />
+      {/* Signal-aligned regime reference lines */}
+      <ReferenceLine yAxisId="left" y={3} stroke="#f5a623" strokeDasharray="3 3" label={{ value: 'Max Cap (3x)', fill: '#f5a623', fontSize: 9 }} />
+      <ReferenceLine yAxisId="left" y={2} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Bullish (>2x)', fill: '#22c55e', fontSize: 9 }} />
       <ReferenceLine yAxisId="left" y={1} stroke="#fff" strokeWidth={2} label={{ value: 'Neutral (1x)', fill: '#fff', fontSize: 9 }} />
-      <ReferenceLine yAxisId="left" y={0.25} stroke="#ef4444" strokeDasharray="3 3" label={{ value: 'Defensive', fill: '#ef4444', fontSize: 9 }} />
-      {/* Regime background zones (simplified using last regime) */}
-      <ReferenceArea yAxisId="left" y1={3} y2={4} fill="#22c55e" fillOpacity={0.05} />
-      <ReferenceArea yAxisId="left" y1={2.5} y2={3} fill="#00d4ff" fillOpacity={0.05} />
-      <ReferenceArea yAxisId="left" y1={1.5} y2={2.5} fill="#f5a623" fillOpacity={0.05} />
-      <ReferenceArea yAxisId="left" y1={0.75} y2={1.5} fill="#ff9800" fillOpacity={0.05} />
-      <ReferenceArea yAxisId="left" y1={0.25} y2={0.75} fill="#ef4444" fillOpacity={0.05} />
-      <ReferenceArea yAxisId="left" y1={0} y2={0.25} fill="#000" fillOpacity={0.1} />
+      <ReferenceLine yAxisId="left" y={0.3} stroke="#ef4444" strokeDasharray="3 3" label={{ value: 'Bearish (<0.3x)', fill: '#ef4444', fontSize: 9 }} />
+      {/* Signal background zones: BULLISH >2, NEUTRAL 1-2, CAUTION 0.3-1, BEARISH <0.3 */}
+      <ReferenceArea yAxisId="left" y1={2} y2={3} fill="#22c55e" fillOpacity={0.05} />
+      <ReferenceArea yAxisId="left" y1={1} y2={2} fill="#f5a623" fillOpacity={0.05} />
+      <ReferenceArea yAxisId="left" y1={0.3} y2={1} fill="#ff9800" fillOpacity={0.05} />
+      <ReferenceArea yAxisId="left" y1={0} y2={0.3} fill="#ef4444" fillOpacity={0.05} />
       <Area yAxisId="right" type="monotone" dataKey="volatility" stroke="#ff9800" fill="rgba(255,152,0,0.1)" strokeWidth={1} dot={false} name="Forecast Volatility" />
-      <Line yAxisId="left" type="monotone" dataKey="leverage" stroke="#3b82f6" strokeWidth={2} dot={false} name="Optimal Leverage" />
+      <Line yAxisId="left" type="monotone" dataKey="leverage" stroke="#3b82f6" strokeWidth={2} dot={false} name="Recommended Leverage" />
     </ComposedChart>
   );
 }
@@ -575,7 +573,7 @@ function ChartAnnotation({ kpi }: { kpi: KpiResult }) {
     'omega-ratio': 'Zones: Green=Bullish (Ω>1.5), Yellow=Neutral (1.0-1.5), Orange=Caution (0.7-1.0), Red=Bearish (<0.7). Ω=1 means gains equal losses relative to target.',
     'var-vag': 'Bars show VaR (downside 5%) and VaG (upside 95%). Blue line shows Gain/Risk ratio. Ratio > 3 is neutral, > 6 is bullish for leverage.',
     'kelly-curve': 'Parabolic curve showing expected growth vs leverage. Peak = Optimal Kelly. Left of peak: underinvesting. Right of peak: risk increases, then turns negative (red zone).',
-    'vmkl': 'Blue line = recommended leverage. Orange area = forecast volatility. Higher volatility pushes leverage down. Hard cap at 3x, minimum at 0.25x defensive.',
+    'vmkl': 'Blue line = recommended leverage. Orange area = forecast volatility. Zones: Green=Bullish (>2x), Yellow=Neutral (1-2x), Orange=Caution (0.3-1x), Red=Bearish (<0.3x). Hard cap at 3x.',
   };
   const text = annotations[kpi.id];
   if (!text) return null;

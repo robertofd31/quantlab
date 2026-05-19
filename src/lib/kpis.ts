@@ -504,14 +504,12 @@ export function calcVMKL(input: KpiInput): KpiResult {
 
   const optimalLeverage = rawLeverages[rawLeverages.length - 1] || cappedLeverage;
 
-  // Regime classification
+  // Regime classification (4 tiers aligned with BULLISH/NEUTRAL/CAUTION/BEARISH)
   const getRegime = (lev: number) => {
-    if (lev >= 4.0) return 'VERY AGGRESSIVE';
-    if (lev >= 2.5) return 'AGGRESSIVE';
-    if (lev >= 1.5) return 'GROWTH';
-    if (lev >= 0.75) return 'BALANCED';
-    if (lev >= 0.25) return 'DEFENSIVE';
-    return 'CASH';
+    if (lev > 2.0) return 'AGGRESSIVE';
+    if (lev > 1.0) return 'GROWTH';
+    if (lev > 0.3) return 'BALANCED';
+    return 'DEFENSIVE';
   };
 
   const regime = getRegime(optimalLeverage);
@@ -525,9 +523,9 @@ export function calcVMKL(input: KpiInput): KpiResult {
   }));
 
   let signal: 'bullish' | 'neutral' | 'caution' | 'bearish' = 'bearish';
-  if (optimalLeverage > 3) signal = 'bullish';
-  else if (optimalLeverage > 2) signal = 'neutral';
-  else if (optimalLeverage > 1) signal = 'caution';
+  if (optimalLeverage > 2.0) signal = 'bullish';
+  else if (optimalLeverage > 1.0) signal = 'neutral';
+  else if (optimalLeverage > 0.3) signal = 'caution';
 
   return {
     id: 'vmkl',
