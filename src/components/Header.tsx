@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home, BarChart2 } from 'lucide-react';
 import { modules } from './modules';
 import type { TabId } from '../App';
 
 export function Header({ activeTab, setActiveTab }: { activeTab: TabId; setActiveTab: (t: TabId) => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isKpis = activeTab === 'kpis';
+  const isHome = !isKpis;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-primary/80 backdrop-blur-xl border-b border-border">
@@ -19,6 +22,28 @@ export function Header({ activeTab, setActiveTab }: { activeTab: TabId; setActiv
           </div>
         </div>
 
+        {/* Top-level navigation: Home | KPIs */}
+        <div className="hidden md:flex items-center gap-1 bg-secondary/50 rounded-xl p-1 border border-border">
+          <button
+            onClick={() => setActiveTab('monte-carlo')}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+              isHome ? 'bg-gold/10 text-gold border border-gold/20' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </button>
+          <button
+            onClick={() => setActiveTab('kpis')}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+              isKpis ? 'bg-gold/10 text-gold border border-gold/20' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            <BarChart2 className="w-4 h-4" />
+            KPIs
+          </button>
+        </div>
+
         <button
           className="md:hidden text-white p-2"
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -27,9 +52,32 @@ export function Header({ activeTab, setActiveTab }: { activeTab: TabId; setActiv
         </button>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-primary/95 backdrop-blur-xl border-t border-border px-6 py-4 space-y-2">
-          {modules.map((m) => (
+          {/* Top-level tabs */}
+          <div className="flex gap-2 mb-4 pb-4 border-b border-border">
+            <button
+              onClick={() => { setActiveTab('monte-carlo'); setMobileOpen(false); }}
+              className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                isHome ? 'bg-gold/10 text-gold border border-gold/20' : 'text-text-muted'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </button>
+            <button
+              onClick={() => { setActiveTab('kpis'); setMobileOpen(false); }}
+              className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                isKpis ? 'bg-gold/10 text-gold border border-gold/20' : 'text-text-muted'
+              }`}
+            >
+              <BarChart2 className="w-4 h-4" />
+              KPIs
+            </button>
+          </div>
+          {/* Sub-modules (only show when on Home) */}
+          {isHome && modules.map((m) => (
             <button
               key={m.id}
               onClick={() => { setActiveTab(m.id); setMobileOpen(false); }}

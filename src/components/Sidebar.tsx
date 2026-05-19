@@ -2,6 +2,9 @@ import { modules } from './modules';
 import type { TabId } from '../App';
 
 export function Sidebar({ activeTab, setActiveTab }: { activeTab: TabId; setActiveTab: (t: TabId) => void }) {
+  // Don't show sidebar on KPIs page
+  if (activeTab === 'kpis') return null;
+
   return (
     <aside className="hidden md:flex w-64 bg-secondary border-r border-border p-6 flex-col gap-2 flex-shrink-0 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto">
       <div className="text-[10px] font-bold text-gold uppercase tracking-[2px] mb-4 px-2 opacity-80">Modules</div>

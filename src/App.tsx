@@ -15,8 +15,9 @@ const VolatilityRegimes = lazy(() => import('./components/modules/VolatilityRegi
 const IndicatorsAdvanced = lazy(() => import('./components/modules/IndicatorsAdvanced'))
 const AboutModels = lazy(() => import('./components/modules/AboutModels'))
 const UseCases = lazy(() => import('./components/modules/UseCases'))
+const KpisDashboard = lazy(() => import('./components/modules/KpisDashboard'))
 
-export type TabId = 'monte-carlo' | 'portfolio-simulator' | 'portfolio-optimizer' | 'kelly' | 'simulation-details' | 'volatility-regimes' | 'indicators-advanced' | 'kelly-game' | 'about-models' | 'use-cases'
+export type TabId = 'monte-carlo' | 'portfolio-simulator' | 'portfolio-optimizer' | 'kelly' | 'simulation-details' | 'volatility-regimes' | 'indicators-advanced' | 'kelly-game' | 'about-models' | 'use-cases' | 'kpis'
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('monte-carlo')
@@ -24,8 +25,8 @@ function App() {
   return (
     <div className="min-h-screen bg-primary flex flex-col">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="flex flex-1 pt-[72px]">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className={`flex flex-1 pt-[72px] ${activeTab === 'kpis' ? '' : ''}`}>
+        {activeTab !== 'kpis' && <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
         <main className="flex-1 overflow-y-auto">
           <Suspense fallback={<ModuleLoader />}>
             {activeTab === 'monte-carlo' && (
@@ -43,6 +44,7 @@ function App() {
             {activeTab === 'kelly-game' && <KellyGame />}
             {activeTab === 'about-models' && <AboutModels />}
             {activeTab === 'use-cases' && <UseCases />}
+            {activeTab === 'kpis' && <KpisDashboard />}
           </Suspense>
         </main>
       </div>
