@@ -135,7 +135,22 @@ export default function KpisDashboard() {
       </motion.div>
 
       {/* Layout: Sidebar + Main */}
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {/* Mobile selector */}
+        <div className="md:hidden">
+          <select
+            value={selectedKpi}
+            onChange={(e) => setSelectedKpi(e.target.value)}
+            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-white font-black focus:outline-none focus:border-gold transition-all"
+          >
+            {KPI_ORDER.map((kpiId) => (
+              <option key={kpiId} value={kpiId}>
+                {kpiDefinitions[kpiId]?.shortTitle} — {kpiDefinitions[kpiId]?.category}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Sidebar — KPI List */}
         <aside className="hidden md:flex w-72 flex-shrink-0 flex-col gap-2">
           <div className="text-[10px] font-bold text-gold uppercase tracking-[2px] mb-2 px-2 opacity-80">Indicators</div>
@@ -188,21 +203,6 @@ export default function KpisDashboard() {
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red inline-block" /> BEARISH</span>
           </div>
         </aside>
-
-        {/* Mobile selector */}
-        <div className="md:hidden mb-4">
-          <select
-            value={selectedKpi}
-            onChange={(e) => setSelectedKpi(e.target.value)}
-            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-white font-black focus:outline-none focus:border-gold transition-all"
-          >
-            {KPI_ORDER.map((kpiId) => (
-              <option key={kpiId} value={kpiId}>
-                {kpiDefinitions[kpiId]?.shortTitle} — {kpiDefinitions[kpiId]?.category}
-              </option>
-            ))}
-          </select>
-        </div>
 
         {/* Main area */}
         <main className="flex-1 min-w-0">

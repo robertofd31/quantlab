@@ -41,8 +41,8 @@ export function KpiCard({ kpi }: KpiCardProps) {
   const renderBasic = () => (
     <div className="space-y-4">
       {/* Main value */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="min-w-0">
           <div className="text-3xl font-black text-white">
             {kpi.id === 'jensen-kelly' && `${kpi.values.kellyFull}x`}
             {kpi.id === 'omega-ratio' && `${kpi.values.currentOmega}`}
@@ -55,7 +55,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
           </div>
         </div>
         <div
-          className="px-3 py-1.5 rounded-lg text-xs font-black border"
+          className="px-3 py-1.5 rounded-lg text-xs font-black border self-start sm:self-auto"
           style={{
             backgroundColor: `${signalConfig.color}15`,
             borderColor: `${signalConfig.color}30`,
@@ -112,7 +112,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
 
       {/* Sparkline */}
       {kpi.chartData && kpi.chartData.length > 0 && (
-        <div className="h-[140px] w-full">
+        <div className="h-[120px] md:h-[140px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             {kpi.id === 'var-vag' ? (
               <BarChart data={kpi.chartData}>
@@ -147,9 +147,9 @@ export function KpiCard({ kpi }: KpiCardProps) {
     <div className="space-y-6">
       {/* Main Chart */}
       {kpi.chartData && kpi.chartData.length > 0 && (
-        <div className="bg-secondary rounded-xl p-4 border border-border">
-          <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-3">Indicator Chart</div>
-          <div className="h-[320px] w-full">
+        <div className="bg-secondary rounded-xl p-3 md:p-4 border border-border">
+          <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-2 md:mb-3">Indicator Chart</div>
+          <div className="h-[240px] md:h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               {kpi.id === 'jensen-kelly' && <JensenKellyChart kpi={kpi} />}
               {kpi.id === 'omega-ratio' && <OmegaChart kpi={kpi} />}
@@ -283,21 +283,21 @@ export function KpiCard({ kpi }: KpiCardProps) {
       className="bg-card border border-border rounded-2xl overflow-hidden"
     >
       {/* Header */}
-      <div className="p-5 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-4 md:p-5 border-b border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: `${def.categoryColor}15` }}
             >
               <div className="w-4 h-4 rounded-full" style={{ backgroundColor: def.categoryColor }} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-white font-bold text-lg">{def.shortTitle}</h3>
-              <p className="text-text-muted text-xs">{def.name}</p>
+              <p className="text-text-muted text-xs truncate">{def.name}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div
               className="text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider"
               style={{
@@ -343,7 +343,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
       </div>
 
       {/* Body */}
-      <div className="p-5">
+      <div className="p-4 md:p-5">
         <AnimatePresence mode="wait">
           <motion.div
             key={mode}
